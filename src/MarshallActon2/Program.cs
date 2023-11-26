@@ -1,72 +1,9 @@
-﻿using InTheHand.Net;
-using InTheHand.Net.Sockets;
+﻿using MarshallActon2;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
-const string _deviceName = "ACTON II";
+var hostBuilder = Host.CreateDefaultBuilder(args);
 
-while (true)
-{
-    try
-    {
-        using var bluetoothClient = new BluetoothClient();
-
-        var bluetoothDeviceInfo = bluetoothClient
-            .PairedDevices
-            .Where(deviceInfo => deviceInfo.DeviceName.Equals(_deviceName, StringComparison.OrdinalIgnoreCase))
-            .First();
-
-        Console.Write("Status: ");
-
-        if (bluetoothDeviceInfo.Connected)
-        {
-            Console.WriteLine("Connected");
-        }
-        else
-        {
-            Console.WriteLine("Disconnected");
-            Console.WriteLine();
-        }
-
-        if (!bluetoothDeviceInfo.Connected)
-        {
-            for (int i = 0; i < bluetoothDeviceInfo.InstalledServices.Count; i++)
-            {
-                try
-                {
-                    if (bluetoothDeviceInfo.Connected)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        Console.Write($"Attempt #{i + 1}: ");
-                        _ = Task.Run(() => bluetoothClient.Connect(bluetoothDeviceInfo.DeviceAddress, bluetoothDeviceInfo.InstalledServices.ElementAt(i)));
-                    }
-                }
-                catch { }
-
-                await Task.Delay(TimeSpan.FromSeconds(30));
-
-                bluetoothDeviceInfo = bluetoothClient
-                       .PairedDevices
-                       .Where(deviceInfo => deviceInfo.DeviceName.Equals(_deviceName, StringComparison.OrdinalIgnoreCase))
-                       .First();
-
-                if (bluetoothDeviceInfo.Connected)
-                {
-                    Console.WriteLine("Succeeded");
-                }
-                else
-                {
-                    Console.WriteLine("Failed");
-                }
-            }
-
-            Console.WriteLine();
-        }
-    }
-    catch { }
-
-    await Task.Delay(TimeSpan.FromSeconds(2));
-}
-
-
+hostBuilder.ConfigureServices(services => services.AddHostedService<BackgroundTask>());
+hostBuilder.UseWindowsService();
+hostBuilder.Build().Run();
