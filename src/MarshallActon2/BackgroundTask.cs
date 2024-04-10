@@ -23,7 +23,7 @@ public sealed class BackgroundTask : BackgroundService
             }
             catch { }
 
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
     }
 
