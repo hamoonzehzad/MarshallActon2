@@ -3,72 +3,71 @@ using InTheHand.Net.Bluetooth;
 using InTheHand.Net.Sockets;
 using Microsoft.Extensions.Hosting;
 
-namespace MarshallActon2
+namespace MarshallActon2;
+
+public sealed class BackgroundTask : BackgroundService
 {
-    internal sealed class BackgroundTask : BackgroundService
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        while (!stoppingToken.IsCancellationRequested)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                try
+                var devices = GetDevices();
+
+                foreach (var device in devices)
                 {
-                    var devices = GetDevices();
-
-                    foreach (var device in devices)
-                    {
-                        ConnectDevice(device);
-                    }
-
+                    ConnectDevice(device);
                 }
-                catch { }
 
-                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
+            catch { }
+
+            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
         }
+    }
 
-        private static List<BluetoothDeviceInfo> GetDevices()
+    private static List<BluetoothDeviceInfo> GetDevices()
+    {
+        using var bluetoothClient = new BluetoothClient();
+
+        var devices = bluetoothClient
+            .PairedDevices
+            .Where(device => device.DeviceName.Contains("ACTON", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return devices;
+    }
+
+    private static void ConnectDevice(BluetoothDeviceInfo device)
+    {
+        Console.WriteLine($"{device.DeviceName} => {(device.Connected ? "Connected" : "Disconnected")}");
+
+        foreach (var service in device.InstalledServices)
         {
-            using var bluetoothClient = new BluetoothClient();
-
-            var devices = bluetoothClient
-                .PairedDevices
-                .Where(device => device.DeviceName.Contains("ACTON", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            return devices;
+            ConnectDeviceService(device, service);
         }
+    }
 
-        private static void ConnectDevice(BluetoothDeviceInfo device)
+    private static void ConnectDeviceService(BluetoothDeviceInfo device, Guid service)
+    {
+        _ = Task.Run(() =>
         {
-            Console.WriteLine($"{device.DeviceName} => {(device.Connected ? "Connected" : "Disconnected")}");
+            var serviceName = BluetoothService.GetName(service);
 
-            foreach (var service in device.InstalledServices)
+            try
             {
-                ConnectDeviceService(device, service);
+                using var bluetoothClient = new BluetoothClient();
+
+                var endPoint = new BluetoothEndPoint(device.DeviceAddress, service);
+
+                bluetoothClient.Connect(endPoint);
             }
-        }
-
-        private static void ConnectDeviceService(BluetoothDeviceInfo device, Guid service)
-        {
-            _ = Task.Run(() =>
+            catch (Exception ex)
             {
-                var serviceName = BluetoothService.GetName(service);
-
-                try
-                {
-                    using var bluetoothClient = new BluetoothClient();
-
-                    var endPoint = new BluetoothEndPoint(device.DeviceAddress, service);
-
-                    bluetoothClient.Connect(endPoint);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    Console.WriteLine();
-                }
-            });
-        }
+                Console.WriteLine(ex.Message);
+                Console.WriteLine();
+            }
+        });
     }
 }
