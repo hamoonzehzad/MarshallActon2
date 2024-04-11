@@ -12,7 +12,7 @@ After the application finds the speaker it will try to reconnect its services on
 
 ## Notes
 
-1- This application doesn't have anything to do with the low level chipset configuration and it just uses the high level communication APIs provided by the operating system.
+1- This application doesn't have anything to do with the low level chipset configurations and it just uses the high level communication APIs provided by the operating system.
 
 2- Although this application is written by .NET 8 which is cross-platform but it's worth to mention that it uses just windows APIs to find the Bluetooth devices so you cannot run this application on Mac or Linux.
 
