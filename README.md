@@ -10,7 +10,7 @@ This application has a background service that checks the connectivity of the sp
 Every single device has different type of bluetooth services that are responsible for different functionalities such as audio, video etc. Every single one of these services has its own unique UUID.
 After the application finds the speaker it will try to reconnect its services one by one in parallel fashion.
 
-## Some Notes
+## Notes
 
 1- This application doesn't have anything to do with the low level chipset configuration and it just uses the high level communication APIs provided by the operating system.
 
