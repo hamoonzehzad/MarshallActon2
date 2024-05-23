@@ -8,7 +8,7 @@ public sealed class BackgroundTask : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            MarshallService.Connect();
+            await MarshallService.ConnectAsync();
             
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }

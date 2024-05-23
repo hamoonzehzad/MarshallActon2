@@ -24,14 +24,14 @@ public static class MarshallService
         return services;
     }
 
-    public static void Connect()
+    public static async Task ConnectAsync()
     {
         var devices = GetDevices();
 
-        ConnectDevices(devices);
+        await ConnectDevicesAsync(devices);
     }
 
-    public static void ConnectDevices(List<BluetoothDeviceInfo> devices)
+    public static async Task ConnectDevicesAsync(List<BluetoothDeviceInfo> devices)
     {
         foreach (var device in devices)
         {
@@ -42,7 +42,7 @@ public static class MarshallService
             {
                 CheckInstalledServices(device);
 
-                ConnectDevice(device);
+                await ConnectDeviceAsync(device);
             }
             catch (Exception exception)
             {
@@ -75,7 +75,7 @@ public static class MarshallService
         Console.WriteLine();
     }
 
-    private static void ConnectDevice(BluetoothDeviceInfo device)
+    private static async Task ConnectDeviceAsync(BluetoothDeviceInfo device)
     {
         Console.Write("State: ");
 
@@ -83,6 +83,8 @@ public static class MarshallService
         {
             var endpoint = new BluetoothEndPoint(device.DeviceAddress, BluetoothService.AudioSink);
 
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            
             Client.Connect(endpoint);
         }
 
